@@ -25,9 +25,9 @@ struct advancedSearch: Decodable {
         struct computers: Decodable {
             let name: String
             let id: Int
-            let DateReturned: String
-            let DateOut: String
-            let Availability: String
+            let DateCheckedIn: String
+            let DateCheckedOut: String
+            let LoanerAvailability: String
             let Username: String
             let Department: String
         }
@@ -37,18 +37,18 @@ struct advancedSearch: Decodable {
 class computerObject {
     var name: String
     var id: Int
-    var DateReturned: String
-    var DateOut: String
-    var Availability: String
+    var DateCheckedIn: String
+    var DateCheckedOut: String
+    var LoanerAvailability: String
     var Username: String
     var Department: String
     
     init(name: String, id: Int, DateReturned: String, DateOut: String, Availability: String, Username: String, Department: String) {
         self.name = name
         self.id = id
-        self.DateReturned = DateReturned
-        self.DateOut = DateOut
-        self.Availability = Availability
+        self.DateCheckedIn = DateReturned
+        self.DateCheckedOut = DateOut
+        self.LoanerAvailability = Availability
         self.Username = Username
         self.Department = Department
     }
@@ -148,7 +148,7 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
                         let computerData = try decoder.decode(advancedSearch.self, from: dataReturn!)
                         
                         for entries in computerData.advanced_computer_search.computers {
-                            self.computerList.append(computerObject(name: entries.name, id: entries.id, DateReturned: entries.DateReturned, DateOut: entries.DateOut, Availability: entries.Availability, Username: entries.Username, Department: entries.Department))
+                            self.computerList.append(computerObject(name: entries.name, id: entries.id, DateReturned: entries.DateCheckedIn, DateOut: entries.DateCheckedOut, Availability: entries.LoanerAvailability, Username: entries.Username, Department: entries.Department))
                             
                         }
                         DispatchQueue.main.async {
@@ -219,8 +219,8 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
         if tableColumn?.title == "Computer"{
             
             resultComputer.append(tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as! NSTableCellView)
-            resultComputer[row].textField?.stringValue = computerList[row].name            
-            if computerList[row].Availability != "Yes" {
+            resultComputer[row].textField?.stringValue = computerList[row].name
+            if computerList[row].LoanerAvailability != "Yes" {
                 resultComputer[row].textField?.drawsBackground = true
                 if UIAppearance == "Light" {
                     resultComputer[row].textField?.backgroundColor = NSColor(red: 0.98, green: 0.99, blue: 0.76, alpha: 1.0)
@@ -230,14 +230,17 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
             
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat =  "yyyy-MM-dd"
-                let dateOut = dateFormatter.date(from: computerList[row].DateOut)
+                let dateOut = dateFormatter.date(from: computerList[row].DateCheckedOut)
                 var dateComponent = DateComponents()
                 let weekSelected = UserDefaults.standard.integer(forKey: "alert")
                 dateComponent.day = (weekSelected + 1) * 7
-                let dateThreeWeeksOut = Calendar.current.date(byAdding: dateComponent, to: dateOut!)
-                let date = NSDate()
-                if dateThreeWeeksOut?.compare(date as Date) == .orderedAscending {
-                    resultComputer[row].textField?.stringValue = "🚨\(resultComputer[row].textField!.stringValue)🚨"
+                if let dateOut = dateOut {
+                    let dateThreeWeeksOut = Calendar.current.date(byAdding: dateComponent, to: dateOut)
+                    let date = NSDate()
+                    if dateThreeWeeksOut?.compare(date as Date) == .orderedAscending {
+                        resultComputer[row].textField?.stringValue = "🚨\(resultComputer[row].textField!.stringValue)🚨"
+                    }
+                    
                 }
                 
             } else {
@@ -251,7 +254,7 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
         else if tableColumn?.title == "Username"{
             
             resultUser.append(tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as! NSTableCellView)
-            if computerList[row].Availability != "Yes" {
+            if computerList[row].LoanerAvailability != "Yes" {
                 resultUser[row].textField?.isEditable = false
                 resultUser[row].textField?.drawsBackground = true
                 if UIAppearance == "Light" {
@@ -274,7 +277,7 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
         else if tableColumn?.title == "Checked Out"{
             datePickerOut.append(tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as! NSDatePicker)
             
-            if computerList[row].Availability == "Yes" {
+            if computerList[row].LoanerAvailability == "Yes" {
                 
                 datePickerOut[row].dateValue = Date()
                 datePickerOut[row].drawsBackground = false
@@ -301,7 +304,7 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat =  "yyyy-MM-dd"
                 
-                if let date = dateFormatter.date(from: computerList[row].DateOut) {
+                if let date = dateFormatter.date(from: computerList[row].DateCheckedOut) {
                     datePickerOut[row].dateValue = date
                 }
                 
@@ -312,7 +315,7 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
         } else if tableColumn?.title == "Checked In"{
             datePickerIn.append(tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as! NSDatePicker)
             
-            if computerList[row].Availability == "Yes" {
+            if computerList[row].LoanerAvailability == "Yes" {
                 
                 datePickerIn[row].isEnabled = false
                 datePickerIn[row].datePickerElements = .yearMonthDay
@@ -325,7 +328,7 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateFormat =  "yyyy-MM-dd"
                 
-                if let date = dateFormatter.date(from: computerList[row].DateReturned) {
+                if let date = dateFormatter.date(from: computerList[row].DateCheckedIn) {
                     datePickerIn[row].dateValue = date
                 }
                 
@@ -345,7 +348,7 @@ class ViewController: NSViewController, NSTableViewDelegate, NSTableViewDataSour
         } else {
             
             actionButton.append(tableView.makeView(withIdentifier: tableColumn!.identifier, owner: self) as! NSButton)
-            if computerList[row].Availability != "Yes" {
+            if computerList[row].LoanerAvailability != "Yes" {
                 actionButton[row].title = "Check In"
                 
             } else {
